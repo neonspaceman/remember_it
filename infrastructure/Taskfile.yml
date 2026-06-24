@@ -1,0 +1,35 @@
+version: "3"
+
+dotenv: [".env"]
+
+tasks:
+  default:
+    desc: Show commands descriptions
+    cmds:
+      - task --list
+    silent: true
+
+  create-network:
+    desc: Create docker network
+    cmds:
+      - >-
+        if [ "$(docker network ls | grep -c $DOCKER_NETWORK_NAME)" -eq 0 ]; then
+        docker network create
+        --attachable
+        --subnet="$DOCKER_NETWORK_CIDR"
+        --driver=bridge
+        -o com.docker.network.bridge.name="$DOCKER_NETWORK_BRIDGE_NAME"
+        -o com.docker.network.driver.mtu="$DOCKER_NETWORK_MTU"
+        $DOCKER_NETWORK_NAME ;
+        fi
+
+  up:
+    desc: Up infrastructure containers
+    deps: [create-network]
+    cmds:
+      - docker compose up -d
+
+  down:
+    desc: Down infrastructure containers
+    cmds:
+      - docker compose down

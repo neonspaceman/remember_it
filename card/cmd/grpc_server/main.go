@@ -1,6 +1,8 @@
 package main
 
 import (
+	"buf.build/go/protovalidate"
+	api_card "card/gen/go/card/v1"
 	"card/internal/adapter/postgresql"
 	grpc_api "card/internal/api/grpc"
 	"card/internal/config"
@@ -9,16 +11,15 @@ import (
 	review_service "card/internal/service/review"
 	"card/internal/usecase/command"
 	"card/internal/usecase/query"
-	"card/pkg/api/card"
 	"context"
 	"flag"
 	"fmt"
 	trmpgx "github.com/avito-tech/go-transaction-manager/drivers/pgxv5/v2"
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
-	validator_pkg "github.com/go-playground/validator/v10"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpc_logging "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	grpc_protovalidate "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
@@ -80,7 +81,11 @@ func run(cfg *config.Config) error {
 	}
 	defer pool.Close()
 
-	validator := validator_pkg.New(validator_pkg.WithRequiredStructEnabled())
+	protoValidator, err := protovalidate.New()
+	if err != nil {
+		return fmt.Errorf("failed to init proto validator: %w", err)
+	}
+
 	trManager, err := manager.New(trmpgx.NewDefaultFactory(pool))
 	trGetter := trmpgx.DefaultCtxGetter
 
@@ -92,9 +97,9 @@ func run(cfg *config.Config) error {
 	cardStateRepository := postgresql.NewCardStateRepository(pool, trGetter)
 	reviewLogRepository := postgresql.NewReviewLogRepository(pool, trGetter)
 
-	createCardHandler := command.NewCreateCardHandler(cardRepository, cardStateRepository, trManager, validator)
-	getCardsByUserIdHandler := query.NewGetCardByUserIdHandler(pool, validator)
-	reviewCardHandler := command.NewReviewCardHandler(cardRepository, cardStateRepository, reviewLogRepository, review_service.NewScheduler(), validator, trManager)
+	createCardHandler := command.NewCreateCardHandler(cardRepository, cardStateRepository, trManager)
+	getCardsByUserIdHandler := query.NewGetCardByUserIdHandler(pool)
+	reviewCardHandler := command.NewReviewCardHandler(cardRepository, cardStateRepository, reviewLogRepository, review_service.NewScheduler(), trManager)
 
 	api := grpc_api.NewCardImpl(grpc_api.CardImplProps{
 		CreateCardHandler:     createCardHandler,
@@ -121,10 +126,11 @@ func run(cfg *config.Config) error {
 			grpc_recovery.UnaryServerInterceptor(),
 			//InterceptorRequestId(),
 			grpc_logging.UnaryServerInterceptor(interceptors.LoggerInterceptor(log), grpc_logging.WithLogOnEvents(grpc_logging.StartCall, grpc_logging.FinishCall)),
+			grpc_protovalidate.UnaryServerInterceptor(protoValidator),
 		)),
 	)
 
-	card.RegisterCardServiceServer(server, api)
+	api_card.RegisterCardServiceServer(server, api)
 
 	if cfg.App.Env == consts.EnvDev {
 		reflection.Register(server)

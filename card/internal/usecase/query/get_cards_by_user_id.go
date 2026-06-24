@@ -7,40 +7,28 @@ import (
 	"context"
 	"fmt"
 	sq "github.com/Masterminds/squirrel"
-	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type GetCardsByUserIdQuery struct {
-	UserId uuid.UUID `validate:"required"`
-	Limit  uint64    `validate:"required"`
-	After  uuid.UUID `validate:"omitempty"`
+	UserId uuid.UUID
+	Limit  uint64
+	After  uuid.UUID
 }
 
 type GetCardByUserIdHandler struct {
-	conn     *pgxpool.Pool
-	validate *validator.Validate
+	conn *pgxpool.Pool
 }
 
-func NewGetCardByUserIdHandler(
-	conn *pgxpool.Pool,
-	validate *validator.Validate,
-) *GetCardByUserIdHandler {
+func NewGetCardByUserIdHandler(conn *pgxpool.Pool) *GetCardByUserIdHandler {
 	return &GetCardByUserIdHandler{
-		conn:     conn,
-		validate: validate,
+		conn: conn,
 	}
 }
 
 func (h *GetCardByUserIdHandler) Handle(ctx context.Context, cmd GetCardsByUserIdQuery) ([]*domain_card.Card, error) {
-	err := h.validate.Struct(&cmd)
-
-	if err != nil {
-		return nil, err
-	}
-
 	b := query_builder.CardQueryBuilder().
 		Where(sq.Eq{consts.CardUserIdColumn: cmd.UserId}).
 		OrderBy(fmt.Sprintf("%s DESC", consts.CardIdColumn)).

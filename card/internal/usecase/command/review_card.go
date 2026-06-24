@@ -8,15 +8,14 @@ import (
 	"context"
 	"fmt"
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
-	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"time"
 )
 
 type ReviewCardCmd struct {
-	UserId     uuid.UUID `validate:"required"`
-	CardId     uuid.UUID `validate:"required"`
-	ReviewedAt time.Time `validate:"required"`
+	UserId     uuid.UUID
+	CardId     uuid.UUID
+	ReviewedAt time.Time
 	Rating     review_domain.RatingType
 }
 
@@ -25,7 +24,6 @@ type ReviewCardHandler struct {
 	cardStateRepository card_state_domain.CardStateRepositoryInterface
 	reviewLogRepository review_domain.ReviewLogRepositoryInterface
 	scheduler           review.SchedulerInterface
-	validate            *validator.Validate
 	trManager           *manager.Manager
 }
 
@@ -34,7 +32,6 @@ func NewReviewCardHandler(
 	cardStateRepository card_state_domain.CardStateRepositoryInterface,
 	reviewLogRepository review_domain.ReviewLogRepositoryInterface,
 	scheduler review.SchedulerInterface,
-	validate *validator.Validate,
 	trManager *manager.Manager,
 ) *ReviewCardHandler {
 	return &ReviewCardHandler{
@@ -42,17 +39,11 @@ func NewReviewCardHandler(
 		cardStateRepository: cardStateRepository,
 		reviewLogRepository: reviewLogRepository,
 		scheduler:           scheduler,
-		validate:            validate,
 		trManager:           trManager,
 	}
 }
 
 func (h *ReviewCardHandler) Handle(ctx context.Context, cmd ReviewCardCmd) (*review_domain.ReviewLog, error) {
-	err := h.validate.Struct(&cmd)
-	if err != nil {
-		return nil, err
-	}
-
 	card, err := h.cardRepository.GetById(ctx, cmd.CardId)
 	if err != nil {
 		return nil, fmt.Errorf("get card '%s': %w", cmd.CardId, err)

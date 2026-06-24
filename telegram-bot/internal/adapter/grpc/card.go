@@ -1,7 +1,7 @@
 package grpc
 
 import (
-	card_api "card/pkg/api/card"
+	card_api "card/gen/go/card/v1"
 	"context"
 	"github.com/google/uuid"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/metadata"
@@ -74,7 +74,7 @@ func (c *CardClient) ReviewCard(ctx context.Context, userId uuid.UUID, cardId uu
 		return nil, err
 	}
 
-	response, err := c.grpc.Review(ctx, &card_api.ReviewCardRequest{
+	response, err := c.grpc.Review(ctx, &card_api.ReviewRequest{
 		UserId:   userId.String(),
 		CardId:   cardId.String(),
 		ReviewAt: timestamppb.Now(),

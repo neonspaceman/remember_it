@@ -3,7 +3,7 @@ package grpc
 import (
 	"card/internal/usecase/command"
 	"card/internal/usecase/query"
-	"card/pkg/api/card"
+	api_card "card/gen/go/card/v1"
 	"platform/pkg/logger"
 )
 
@@ -15,7 +15,7 @@ type CardImplProps struct {
 }
 
 type CardImpl struct {
-	card.UnimplementedCardServiceServer
+	api_card.UnimplementedCardServiceServer
 	log                   *logger.Logger
 	cardCreateHandler     *command.CardCreateHandler
 	getCardsByUserIdQuery *query.GetCardByUserIdHandler

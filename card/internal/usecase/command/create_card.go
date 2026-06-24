@@ -6,15 +6,14 @@ import (
 	"context"
 	"fmt"
 	"github.com/avito-tech/go-transaction-manager/trm/v2/manager"
-	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
 type CreateCardCmd struct {
-	UserId   uuid.UUID            `validate:"required"`
-	Question string               `validate:"required"`
-	Answer   string               `validate:"required"`
-	FileType domain_card.FileType `validate:"required"`
+	UserId   uuid.UUID
+	Question string
+	Answer   string
+	FileType domain_card.FileType
 	FileId   string
 }
 
@@ -22,29 +21,21 @@ type CardCreateHandler struct {
 	cardRepository      domain_card.CardRepositoryInterface
 	cardStateRepository domain_card_state.CardStateRepositoryInterface
 	trManager           *manager.Manager
-	validate            *validator.Validate
 }
 
 func NewCreateCardHandler(
 	cardRepository domain_card.CardRepositoryInterface,
 	cardStateRepository domain_card_state.CardStateRepositoryInterface,
 	trManager *manager.Manager,
-	validate *validator.Validate,
 ) *CardCreateHandler {
 	return &CardCreateHandler{
 		cardRepository:      cardRepository,
 		cardStateRepository: cardStateRepository,
 		trManager:           trManager,
-		validate:            validate,
 	}
 }
 
 func (h *CardCreateHandler) Handle(ctx context.Context, cmd CreateCardCmd) (*domain_card.Card, error) {
-	err := h.validate.Struct(&cmd)
-	if err != nil {
-		return nil, err
-	}
-
 	card, err := domain_card.NewCard(cmd.UserId, cmd.Answer, cmd.Question, cmd.FileType, cmd.FileId)
 	if err != nil {
 		return nil, fmt.Errorf("new card: %w", err)

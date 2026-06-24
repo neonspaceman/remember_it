@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "buf/validate/validate.proto";
+
+package card.v1;
+
+enum FileType {
+  FILE_TYPE_UNSPECIFIED = 0;
+  FILE_TYPE_PHOTO = 1;
+  FILE_TYPE_DOCUMENT = 2;
+}
+
+enum Rating {
+  RATING_UNSPECIFIED = 0;
+  RATING_AGAIN = 1;
+  RATING_HARD = 2;
+  RATING_GOOD = 3;
+  RATING_EASY = 4;
+}
+
+message Card {
+  string id = 1;
+  string question = 2;
+  string answer = 3;
+  FileType file_type = 4;
+  string file_id = 5;
+}
+
+message ReviewLog {
+  string id = 1;
+  string card_id = 2;
+  Rating rating = 3;
+}
+
+message CreateRequest {
+  string user_id = 1 [(buf.validate.field).string.uuid = true];
+  string question = 2 [(buf.validate.field).string = {min_len: 1, max_len: 1000}];
+  string answer = 3 [(buf.validate.field).string = {min_len: 1, max_len: 1000}];
+  FileType file_type = 4 [(buf.validate.field).enum.defined_only = true];
+  string file_id = 5 [(buf.validate.field).string.max_len = 255];
+}
+
+message CreateResponse {
+  Card card = 1;
+}
+
+message GetByUserIdRequest {
+  string user_id = 1 [(buf.validate.field).string.uuid = true];
+  uint64 limit = 2 [(buf.validate.field).uint64 = {gte: 1, lte: 100}];
+  string after = 3;
+}
+
+message GetByUserIdResponse {
+  repeated Card cards = 1;
+  string end_cursor = 2;
+  bool has_next = 3;
+}
+
+message ReviewRequest {
+  string user_id = 1 [(buf.validate.field).string.uuid = true];
+  string card_id = 2 [(buf.validate.field).string.uuid = true];
+  google.protobuf.Timestamp review_at = 3 [(buf.validate.field).required = true];
+  Rating rating = 4 [(buf.validate.field).enum.defined_only = true];
+}
+
+message ReviewResponse {
+  ReviewLog review_log = 1;
+}

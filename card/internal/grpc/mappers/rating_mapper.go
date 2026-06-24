@@ -2,7 +2,7 @@ package mappers
 
 import (
 	review_domain "card/internal/domain/review"
-	card_api "card/pkg/api/card"
+	api_card "card/gen/go/card/v1"
 	"errors"
 	"fmt"
 )
@@ -12,32 +12,32 @@ var (
 	ErrUnknownDomainRating = errors.New("unknown rating representation")
 )
 
-func ToRating(rating card_api.Rating) (review_domain.RatingType, error) {
+func ToRating(rating api_card.Rating) (review_domain.RatingType, error) {
 	switch rating {
-	case card_api.Rating_AGAIN:
+	case api_card.Rating_RATING_AGAIN:
 		return review_domain.AgainRating, nil
-	case card_api.Rating_HARD:
+	case api_card.Rating_RATING_HARD:
 		return review_domain.HardRating, nil
-	case card_api.Rating_GOOD:
+	case api_card.Rating_RATING_GOOD:
 		return review_domain.GoodRating, nil
-	case card_api.Rating_EASY:
+	case api_card.Rating_RATING_EASY:
 		return review_domain.EasyRating, nil
 	default:
 		return "", fmt.Errorf("rating type '%d': %w", rating, ErrUnknownApiRating)
 	}
 }
 
-func FromRating(rating review_domain.RatingType) (card_api.Rating, error) {
+func FromRating(rating review_domain.RatingType) (api_card.Rating, error) {
 	switch rating {
 	case review_domain.AgainRating:
-		return card_api.Rating_AGAIN, nil
+		return api_card.Rating_RATING_AGAIN, nil
 	case review_domain.HardRating:
-		return card_api.Rating_HARD, nil
+		return api_card.Rating_RATING_HARD, nil
 	case review_domain.GoodRating:
-		return card_api.Rating_GOOD, nil
+		return api_card.Rating_RATING_GOOD, nil
 	case review_domain.EasyRating:
-		return card_api.Rating_EASY, nil
+		return api_card.Rating_RATING_EASY, nil
 	default:
-		return card_api.Rating(0), fmt.Errorf("rating type '%s': %w", rating, ErrUnknownDomainRating)
+		return api_card.Rating(0), fmt.Errorf("rating type '%s': %w", rating, ErrUnknownDomainRating)
 	}
 }

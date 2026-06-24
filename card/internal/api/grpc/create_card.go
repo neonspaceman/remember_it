@@ -4,14 +4,14 @@ import (
 	domain_card "card/internal/domain/card"
 	"card/internal/grpc/mappers"
 	"card/internal/usecase/command"
-	card_api "card/pkg/api/card"
+	api_card "card/gen/go/card/v1"
 	"context"
 	"fmt"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
-func (s *CardImpl) Create(ctx context.Context, req *card_api.CreateRequest) (*card_api.CreateResponse, error) {
+func (s *CardImpl) Create(ctx context.Context, req *api_card.CreateRequest) (*api_card.CreateResponse, error) {
 	s.log.InfoCtx(
 		ctx,
 		"Incoming create request",
@@ -40,5 +40,5 @@ func (s *CardImpl) Create(ctx context.Context, req *card_api.CreateRequest) (*ca
 		return nil, fmt.Errorf("create card handler: %w", err)
 	}
 
-	return &card_api.CreateResponse{Card: mappers.FromCard(card)}, nil
+	return &api_card.CreateResponse{Card: mappers.FromCard(card)}, nil
 }

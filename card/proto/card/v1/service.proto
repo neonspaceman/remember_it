@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package card.v1;
+
+import "card/v1/messages.proto";
+
+service CardService {
+  rpc Create(CreateRequest) returns (CreateResponse);
+  rpc GetByUserId(GetByUserIdRequest) returns (GetByUserIdResponse);
+  rpc Review(ReviewRequest) returns (ReviewResponse);
+}

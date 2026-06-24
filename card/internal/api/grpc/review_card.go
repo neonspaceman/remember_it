@@ -5,7 +5,7 @@ import (
 	review_domain "card/internal/domain/review"
 	"card/internal/grpc/mappers"
 	"card/internal/usecase/command"
-	card_api "card/pkg/api/card"
+	api_card "card/gen/go/card/v1"
 	"context"
 	"errors"
 	"fmt"
@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (s *CardImpl) Review(ctx context.Context, req *card_api.ReviewCardRequest) (*card_api.ReviewCardResponse, error) {
+func (s *CardImpl) Review(ctx context.Context, req *api_card.ReviewRequest) (*api_card.ReviewResponse, error) {
 	s.log.InfoCtx(
 		ctx,
 		"Incoming create request",
@@ -60,8 +60,8 @@ func (s *CardImpl) Review(ctx context.Context, req *card_api.ReviewCardRequest) 
 		return nil, fmt.Errorf("parse rating: %w", err)
 	}
 
-	return &card_api.ReviewCardResponse{
-		ReviewLog: &card_api.ReviewLog{
+	return &api_card.ReviewResponse{
+		ReviewLog: &api_card.ReviewLog{
 			Id:     reviewLog.Id.String(),
 			CardId: reviewLog.CardId.String(),
 			Rating: ratingResponse,

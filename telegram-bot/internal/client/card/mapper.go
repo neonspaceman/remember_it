@@ -1,7 +1,7 @@
 package card
 
 import (
-	card_api "card/pkg/api/card"
+	card_api "card/gen/go/card/v1"
 	"fmt"
 )
 
@@ -14,11 +14,16 @@ func ToReviewLog(reviewLog *card_api.ReviewLog) *ReviewLog {
 }
 
 func FromRating(rating string) (card_api.Rating, error) {
-	v, ok := card_api.Rating_value[rating]
-
-	if !ok {
+	switch rating {
+	case "AGAIN":
+		return card_api.Rating_RATING_AGAIN, nil
+	case "HARD":
+		return card_api.Rating_RATING_HARD, nil
+	case "GOOD":
+		return card_api.Rating_RATING_GOOD, nil
+	case "EASY":
+		return card_api.Rating_RATING_EASY, nil
+	default:
 		return 0, fmt.Errorf("parse '%s': %w", rating, ErrUnknownRating)
 	}
-
-	return card_api.Rating(v), nil
 }

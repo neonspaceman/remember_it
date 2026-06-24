@@ -1,0 +1,38 @@
+networks:
+  development:
+    external: true
+    name: $DOCKER_NETWORK_NAME
+
+services:
+  card-migrate:
+    build:
+      context: ..
+      dockerfile: card/Dockerfile
+      target: migrate
+    environment:
+      GOOSE_DBSTRING: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DATABASE}?sslmode=disable"
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - development
+
+  card:
+    build:
+      context: ..
+      dockerfile: card/Dockerfile
+      target: prod
+    depends_on:
+      card-migrate:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.card-grpc.loadbalancer.server.port=50051"
+      - "traefik.http.services.card-grpc.loadbalancer.server.scheme=h2c"
+      - "traefik.http.routers.card-grpc.rule=Host(`card.remember_it.docker`)"
+      - "traefik.http.routers.card-grpc.entrypoints=grpc"
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - development

@@ -1,0 +1,52 @@
+networks:
+  development:
+    external: true
+    name: $DOCKER_NETWORK_NAME
+
+services:
+  telegram-migrate:
+    build:
+      context: ..
+      dockerfile: telegram-bot/Dockerfile
+      target: migrate
+    environment:
+      GOOSE_DBSTRING: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DATABASE}?sslmode=disable"
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - development
+
+  telegram-bot:
+    build:
+      context: ..
+      dockerfile: telegram-bot/Dockerfile
+      target: prod-bot
+    depends_on:
+      telegram-migrate:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - development
+
+  telegram-miniapp:
+    build:
+      context: ..
+      dockerfile: telegram-bot/Dockerfile
+      target: prod-miniapp
+    depends_on:
+      telegram-migrate:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.miniapp-http.loadbalancer.server.port=8080"
+      - "traefik.http.routers.miniapp-http.rule=Host(`miniapp.remember_it.docker`)"
+      - "traefik.http.routers.miniapp-http.entrypoints=http"
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    networks:
+      - development

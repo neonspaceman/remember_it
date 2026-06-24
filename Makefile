@@ -1,43 +1,16 @@
 .DEFAULT_GOAL := help
-.EXPORT_ALL_VARIABLES: ; # send all vars to shell
-
-include infrastructure/.env
 
 .PHONY: help
 help: ## Show commands descriptions
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(abspath $(firstword $(MAKEFILE_LIST))) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-38s\033[0m %s\n", $$1, $$2}'
-
-.PHONY: build
-build: ## Build docker image
-	docker compose --profile dev build
-
-.PHONY: up
-up: ## Run go app
-	docker compose --profile dev up
-
-.PHONY: down
-down: ## Down all infrastructure containers
-	docker compose --profile dev down
-
-# DEV infrastructure
-
-.PHONY: infrastructure-create-network
-infrastructure-create-network: ## Create network
-	$(eval NETWORK=$(shell docker network ls | grep $(DOCKER_NETWORK_NAME) | wc -l))
-	@if [ $(NETWORK) -eq 0 ]; then \
-  		docker network create \
-			--attachable \
-			--subnet="$(DOCKER_NETWORK_CIDR)" \
-			--driver=bridge \
-			-o com.docker.network.bridge.name="$(DOCKER_NETWORK_BRIDGE_NAME)" \
-			-o com.docker.network.driver.mtu="$(DOCKER_NETWORK_MTU)" \
-			$(DOCKER_NETWORK_NAME) ; \
-	fi
-
-.PHONY: infrastructure-up
-infrastructure-up: ## Up all infrastructure containers
-	make infrastructure-create-network && docker compose --profile infrastructure up
-
-.PHONY: infrastructure-down
-infrastructure-down: ## Down all infrastructure containers
-	docker compose --profile infrastructure down
+	@echo "Each part of the monorepo is managed by its own Makefile:"
+	@echo ""
+	@echo "  infrastructure/  - make up / down   (postgresql, traefik, network)"
+	@echo "  card/            - make up / down / restart / rebuild / migrate-up ..."
+	@echo "  telegram-bot/    - make up / down / restart / rebuild / migrate-up ..."
+	@echo ""
+	@echo "Run 'make help' inside a service directory to see its commands."
+	@echo ""
+	@echo "Typical start:"
+	@echo "  cd infrastructure && make up"
+	@echo "  cd card           && make up"
+	@echo "  cd telegram-bot   && make up"

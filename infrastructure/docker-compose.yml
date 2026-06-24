@@ -1,0 +1,38 @@
+networks:
+  development:
+    external: true
+    name: $DOCKER_NETWORK_NAME
+
+services:
+  postgresql:
+    image: 'postgres:15.2'
+    restart: always
+    environment:
+      POSTGRES_USER: $POSTGRES_USER
+      PGDATA: /var/lib/postgresql/data/pgdata
+      PGPASSWORD: $POSTGRES_PASSWORD
+    volumes:
+      - ./data/postgres_data:/var/lib/postgresql/data/pgdata
+    ports:
+      - '8081:5432'
+    networks:
+      - development
+
+  traefik:
+    image: 'traefik:v3.6.12'
+    ports:
+      - 80:80
+      - 8080:8080
+      - 50051:50051 # grpc
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.grpc.address=:50051"
+      - "--entrypoints.http.address=:80"
+      - "--serversTransport.insecureSkipVerify=true"
+    networks:
+      - development
